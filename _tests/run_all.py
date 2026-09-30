@@ -16,8 +16,12 @@ os.environ["SITE"] = SITE
 # Serve the site the way GitHub Pages does (folders redirect to add a trailing slash)
 class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
-srv = http.server.ThreadingHTTPServer(("127.0.0.1", 8765), functools.partial(Quiet, directory=SITE))
-threading.Thread(target=srv.serve_forever, daemon=True).start()
+try:
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 8765), functools.partial(Quiet, directory=SITE))
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+except OSError:   # something is already serving on 8765 (e.g. a workflow step): use it rather than crash
+    srv = None
+    print("Port 8765 already in use; using the server that's already running.", flush=True)
 
 def summary(out):
     m = re.findall(r"(\d+) passed, (\d+) failed", out)
@@ -80,6 +84,6 @@ for name, cmd, cwd, env, check in SUITES:
         if os.environ.get("GITHUB_ACTIONS"):   # show the failure as an annotation on the run's page
             fails = [l.strip() for l in out.splitlines() if "FAIL" in l][:6] or out.strip().splitlines()[-6:]
             print(f"::error title={name}::{detail} | " + " || ".join(fails).replace("%", "%25").replace("\r", "").replace("\n", " "), flush=True)
-srv.shutdown()
+if srv: srv.shutdown()
 print(f"\n{len(SUITES)-len(failed)} of {len(SUITES)} suites passed in {time.time()-t0:.0f}s")
 sys.exit(1 if failed else 0)
