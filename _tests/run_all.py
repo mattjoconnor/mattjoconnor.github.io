@@ -50,6 +50,7 @@ SUITES = [
     ("ShowComm · push delivery",            PY + [f"{HERE}/showcomm/pushtest.py"],       HERE, {},                  summary),
     ("ShowComm · install (home screen)",    PY + [f"{HERE}/showcomm/pwatest.py"],        HERE, {},                  summary),
     ("ShowComm · Blank + TM key edits",     PY + [f"{HERE}/showcomm/edittest.py"],       HERE, {},                  summary),
+    ("ShowComm · cart kiosk start",         PY + [f"{HERE}/showcomm/kiosktest.py"],      HERE, {},                  summary),
     ("ShowComm · phone navigation",         PY + [f"{HERE}/showcomm/navtest.py"],        HERE, {},                  summary),
     ("ShowComm · readability (12px, 4.5:1)", PY + [f"{HERE}/showcomm/readability.py"],   HERE, {},                  summary),
     ("ShowComm · cart key moves",           ["node", f"{HERE}/showcomm/movetest.js"],    ETK,  {},                  lambda o: no_fail(o, 5)),
