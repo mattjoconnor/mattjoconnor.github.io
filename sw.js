@@ -30,7 +30,9 @@ self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
-    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) return c.focus();
+    const path = new URL(url, self.registration.scope).pathname;
+    for (const c of list) if (new URL(c.url).pathname === path && 'focus' in c) { c.postMessage({type: 'open', url}); return c.focus(); }
+    for (const c of list) if (c.url.startsWith(self.registration.scope) && 'focus' in c) { c.postMessage({type: 'open', url}); return c.focus(); }
     return self.clients.openWindow(url);
   }));
 });
