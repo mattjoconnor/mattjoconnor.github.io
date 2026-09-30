@@ -19,7 +19,7 @@ self.addEventListener('push', e => {
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = {body: e.data ? e.data.text() : ''}; }
   e.waitUntil(self.registration.showNotification(d.title || 'ShowComm', {
     body: d.body || 'New key request', tag: d.tag || undefined, renotify: !!d.tag,
-    icon: '/icons/showcomm-any-192.png', badge: '/icons/showcomm-any-192.png',
+    icon: '/icons/showcomm-any-192.png', badge: '/icons/showcomm-badge-96.png',
     data: {url: d.url || '/showcomm/etk/index.html?role=tm'}
   }));
 });
