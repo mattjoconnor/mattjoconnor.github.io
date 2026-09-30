@@ -81,8 +81,13 @@ with sync_playwright() as pw:
     print('3. A push arriving at ShowPoint’s worker')
     pg=ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     pg.goto(H+'/'); pg.wait_for_timeout(1500)
-    cdp=ctx.new_cdp_session(pg); cdp.send('ServiceWorker.enable')
-    regs=[]; cdp.on('ServiceWorker.workerRegistrationUpdated', lambda e: regs.extend(e['registrations'])); pg.wait_for_timeout(600)
+    pg.evaluate("navigator.serviceWorker.ready.then(()=>true)")          # wait until the worker is really active (slow machines vary)
+    cdp=ctx.new_cdp_session(pg); regs=[]
+    cdp.on('ServiceWorker.workerRegistrationUpdated', lambda e: regs.extend(e['registrations']))
+    cdp.send('ServiceWorker.enable')
+    for _ in range(50):                                                   # up to 5 s for the registration report
+        if any(r['scopeURL']==H+'/' for r in regs): break
+        pg.wait_for_timeout(100)
     rid=[r['registrationId'] for r in regs if r['scopeURL']==H+'/'][0]
     cdp.send('ServiceWorker.deliverPushMessage', {'origin':H,'registrationId':rid,'data':json.dumps({'title':'BP05 · Priya','body':'Key 2 → TECH (latch)','tag':'etk-r1','url':'/showcomm/etk/index.html?role=tm'})})
     pg.wait_for_timeout(1200)
