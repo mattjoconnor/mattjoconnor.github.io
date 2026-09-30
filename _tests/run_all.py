@@ -61,6 +61,7 @@ SUITES = [
     ("ShowGear · QR + PDFs",                ["node", f"{HERE}/showgear/qrtest_full.js"], SG,   {},                  summary),
     ("ShowGear · board order + archive",    PY + [f"{HERE}/showgear/boardtest.py"],      HERE, {},                  summary),
     ("ShowGear · ShowComm link",            PY + [f"{HERE}/showgear/linktest.py"],       HERE, {},                  summary),
+    ("ShowGear · phone navigation",         PY + [f"{HERE}/showgear/navtest.py"],        HERE, {},                  summary),
     ("ShowGear · update prompt",            PY + [f"{HERE}/showgear/sgupd.py"],          HERE, {},                  summary),
     ("ShowPoint · home + switcher",         PY + [f"{HERE}/showcomm/sptest.py"],         HERE, {},                  summary),
     ("ShowPoint · folder redirects",        PY + [f"{HERE}/showpoint/redirects.py"],     HERE, {},                  lambda o: (o.count(" OK ") >= 5 and "FAIL" not in o, f"{o.count(' OK ')} of 5 addresses load")),
