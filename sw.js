@@ -11,6 +11,16 @@ self.addEventListener('fetch', e => {
   e.respondWith(fetch(e.request.url, {cache: 'no-cache', credentials: 'same-origin'})
     .catch(() => new Response(OFFLINE, {headers: {'Content-Type': 'text/html; charset=utf-8'}})));
 });
+// Push from the ShowComm alert function: shows even when the phone is locked or the app is closed
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (_) { d = {body: e.data ? e.data.text() : ''}; }
+  e.waitUntil(self.registration.showNotification(d.title || 'ShowComm', {
+    body: d.body || 'New key request', tag: d.tag || undefined, renotify: !!d.tag,
+    icon: '/icons/showcomm-any-192.png', badge: '/icons/showcomm-any-192.png',
+    data: {url: d.url || '/showcomm/etk/index.html?role=tm'}
+  }));
+});
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const url = (e.notification.data && e.notification.data.url) || self.registration.scope;
