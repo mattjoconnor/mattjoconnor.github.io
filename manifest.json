@@ -1,0 +1,38 @@
+{
+ "id": "/",
+ "name": "ShowPoint",
+ "short_name": "ShowPoint",
+ "start_url": "/",
+ "scope": "/",
+ "display": "standalone",
+ "orientation": "any",
+ "background_color": "#111111",
+ "theme_color": "#111111",
+ "description": "Operations tools for broadcast: ShowComm and ShowGear",
+ "icons": [
+  {
+   "src": "/icons/showpoint-any-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/icons/showpoint-any-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/icons/showpoint-maskable-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "/icons/showpoint-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
