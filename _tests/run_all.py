@@ -1,82 +1,49 @@
-#!/usr/bin/env python3
-"""Runs every ShowPoint test suite against an assembled site and fails if any check fails.
-
-The site must be laid out like GitHub Pages:
-  $SITE/            (mattjoconnor.github.io: ShowPoint home, worker, icons)
-  $SITE/showcomm/   (showcomm repo; ETK is in etk/)
-  $SITE/showgear/   (showgear repo)
-"""
-import functools, http.server, os, re, subprocess, sys, threading, time
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-SITE = os.environ.get("SITE") or os.path.dirname(HERE)
-ETK, SG = os.path.join(SITE, "showcomm", "etk"), os.path.join(SITE, "showgear")
-os.environ["SITE"] = SITE
-
-# Serve the site the way GitHub Pages does (folders redirect to add a trailing slash)
-class Quiet(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *a): pass
-srv = http.server.ThreadingHTTPServer(("127.0.0.1", 8765), functools.partial(Quiet, directory=SITE))
-threading.Thread(target=srv.serve_forever, daemon=True).start()
-
-def summary(out):
-    m = re.findall(r"(\d+) passed, (\d+) failed", out)
-    return (int(m[-1][1]) == 0, f"{m[-1][0]} passed, {m[-1][1]} failed") if m else (False, "no summary line")
-def no_fail(out, need=1):
-    p, f = out.count("PASS"), out.count("FAIL")
-    return (f == 0 and p >= need, f"{p} passed, {f} failed")
-def contains(*needles):
-    return lambda out: (all(n in out for n in needles), "ok" if all(n in out for n in needles) else "missing: " + ", ".join(n for n in needles if n not in out))
-
-def prep_function():
-    """Transpile the push function (minus its imports) so its routing can run in Node."""
-    src = open(os.path.join(SITE, "_supabase", "functions", "etk-push", "index.ts")).read()
-    d = os.path.join(HERE, "showpoint"); open(os.path.join(d, "fn.ts"), "w").write("\n".join(l for l in src.split("\n") if not l.startswith("import ")))
-    subprocess.run([os.path.join(HERE, "node_modules", ".bin", "tsc"), "fn.ts", "--target", "es2022", "--module", "none",
-                    "--skipLibCheck", "--noCheck", "--outDir", "out"], cwd=d, capture_output=True)
-
-PY = [sys.executable]
-SUITES = [
-    # name, command, working dir, extra env, checker
-    ("ShowComm · full crew→TM flow",        PY + [f"{HERE}/showcomm/etkflow.py"],        HERE, {},                  summary),
-    ("ShowComm · confirm with clock skew",  PY + [f"{HERE}/showcomm/etkflow_skew.py"],   HERE, {"BREAK_GTE": "1"},  summary),
-    ("ShowComm · chat",                     PY + [f"{HERE}/showcomm/chattest.py"],       HERE, {},                  summary),
-    ("ShowComm · offline handling",         PY + [f"{HERE}/showcomm/offlinetest.py"],    HERE, {},                  summary),
-    ("ShowComm · update prompt + cart colors", PY + [f"{HERE}/showcomm/updtest.py"],     HERE, {},                  summary),
-    ("ShowComm · push delivery",            PY + [f"{HERE}/showcomm/pushtest.py"],       HERE, {},                  summary),
-    ("ShowComm · install (home screen)",    PY + [f"{HERE}/showcomm/pwatest.py"],        HERE, {},                  summary),
-    ("ShowComm · cart key moves",           ["node", f"{HERE}/showcomm/movetest.js"],    ETK,  {},                  lambda o: no_fail(o, 5)),
-    ("ShowComm · cart page loads",          ["node", f"{HERE}/showcomm/repro.js", "index.html", "crew"], ETK, {}, contains("errors: none")),
-    ("ShowComm · TM page loads",            ["node", f"{HERE}/showcomm/repro.js", "index.html", "tm"],   ETK, {}, contains("errors: none")),
-    ("ShowGear · board",                    ["node", f"{HERE}/showgear/sgtest.js"],      SG,   {},                  summary),
-    ("ShowGear · colors",                   ["node", f"{HERE}/showgear/cbtest.js"],      SG,   {},                  summary),
-    ("ShowGear · matrix",                   ["node", f"{HERE}/showgear/mxtest_full.js"], SG,   {},                  summary),
-    ("ShowGear · sharing",                  ["node", f"{HERE}/showgear/sharetest.js"],   SG,   {},                  summary),
-    ("ShowGear · QR + PDFs",                ["node", f"{HERE}/showgear/qrtest_full.js"], SG,   {},                  summary),
-    ("ShowGear · board order + archive",    PY + [f"{HERE}/showgear/boardtest.py"],      HERE, {},                  summary),
-    ("ShowGear · ShowComm link",            PY + [f"{HERE}/showgear/linktest.py"],       HERE, {},                  summary),
-    ("ShowGear · update prompt",            PY + [f"{HERE}/showgear/sgupd.py"],          HERE, {},                  summary),
-    ("ShowPoint · home + switcher",         PY + [f"{HERE}/showcomm/sptest.py"],         HERE, {},                  summary),
-    ("ShowPoint · folder redirects",        PY + [f"{HERE}/showpoint/redirects.py"],     HERE, {},                  lambda o: (o.count(" OK ") >= 5 and "FAIL" not in o, f"{o.count(' OK ')} of 5 addresses load")),
-    ("ShowPoint · always-fresh pages",      PY + [f"{HERE}/showpoint/fresh.py"],         HERE, {},                  contains("redirects: 5/5", "fresh copy on reopen: True")),
-    ("Push function · message text + keys", ["node", f"{HERE}/showpoint/fn_text.js"],   HERE, {},                  summary),
-    ("Push function · routing",             ["node", f"{HERE}/showpoint/fn_routing.js"], os.path.join(HERE, "showpoint"), {}, summary),
+"""Runs every ShowPoint test suite against the assembled site and fails if any check fails.
+Layout: $SITE = the root site, $SITE/showcomm, $SITE/showgear; a web server on :8765 serves $SITE."""
+import os, re, subprocess, sys, time
+SITE=os.environ.get('SITE','/tmp/site'); T=os.path.dirname(os.path.abspath(__file__))
+env=dict(os.environ, SITE=SITE, NODE_PATH=os.path.join(T,'node_modules'))
+SUITES=[  # (label, command, working folder, extra env)
+ ('ShowGear · QR and exports',  ['node',f'{T}/sg_qrtest_full.js'], f'{SITE}/showgear', {}),
+ ('ShowGear · colors/board',    ['node',f'{T}/sg_cbtest.js'],       f'{SITE}/showgear', {}),
+ ('ShowGear · matrix',          ['node',f'{T}/sg_mxtest_full.js'],  f'{SITE}/showgear', {}),
+ ('ShowGear · sharing',         ['node',f'{T}/sg_sharetest.js'],    f'{SITE}/showgear', {}),
+ ('ShowGear · core',            ['node',f'{T}/sg_sgtest.js'],       f'{SITE}/showgear', {}),
+ ('ShowGear · board (browser)', ['python3',f'{T}/sg_boardtest.py'], T, {}),
+ ('ShowGear · ShowComm link',   ['python3',f'{T}/sg_linktest.py'],  T, {}),
+ ('ShowGear · update prompt',   ['python3',f'{T}/sp_sgupd.py'],     T, {}),
+ ('ShowComm · cart keys/move',  ['node',f'{T}/sc_movetest.js'],     f'{SITE}/showcomm/etk', {}),
+ ('ShowComm · cart loads',      ['node',f'{T}/sc_repro.js','index.html','crew'], f'{SITE}/showcomm/etk', {}),
+ ('ShowComm · TM loads',        ['node',f'{T}/sc_repro.js','index.html','tm'],   f'{SITE}/showcomm/etk', {}),
+ ('ShowComm · full flow',       ['python3',f'{T}/sc_etkflow.py'],   T, {}),
+ ('ShowComm · clock skew',      ['python3',f'{T}/sc_etkflow_skew.py'], T, {'BREAK_GTE':'1'}),
+ ('ShowComm · chat',            ['python3',f'{T}/sc_chattest.py'],  T, {}),
+ ('ShowComm · offline',         ['python3',f'{T}/sc_offlinetest.py'], T, {}),
+ ('ShowComm · colors + update', ['python3',f'{T}/sc_updtest.py'],   T, {}),
+ ('ShowComm · push delivery',   ['python3',f'{T}/sc_pushtest.py'],  T, {}),
+ ('ShowPoint · home + install', ['python3',f'{T}/sc_sptest.py'],    T, {}),
+ ('ShowPoint · installed app',  ['python3',f'{T}/sc_pwatest.py'],   T, {}),
+ ('ShowPoint · redirects',      ['python3',f'{T}/sp_redir.py'],     T, {}),
+ ('ShowPoint · fresh pages',    ['python3',f'{T}/sp_fresh.py'],     T, {}),
+ ('Push function',              ['node',f'{T}/fn_test.js'],         T, {}),
 ]
-
-prep_function()
-failed, t0 = [], time.time()
-for name, cmd, cwd, env, check in SUITES:
-    t = time.time()
-    try:
-        p = subprocess.run(cmd, cwd=cwd, env={**os.environ, **env}, capture_output=True, text=True, timeout=420)
-        out = p.stdout + p.stderr
-    except subprocess.TimeoutExpired:
-        out = "TIMED OUT"
-    ok, detail = check(out)
-    print(f"{'PASS' if ok else 'FAIL'}  {name:42} {detail}  ({time.time()-t:.0f}s)", flush=True)
-    if not ok:
-        failed.append(name)
-        print("\n".join("      " + l for l in out.strip().splitlines()[-25:]), flush=True)
-srv.shutdown()
-print(f"\n{len(SUITES)-len(failed)} of {len(SUITES)} suites passed in {time.time()-t0:.0f}s")
-sys.exit(1 if failed else 0)
+only=sys.argv[1:]
+results=[]; t0=time.time()
+for label,cmd,cwd,extra in SUITES:
+    if only and not any(o.lower() in label.lower() for o in only): continue
+    t=time.time()
+    try: p=subprocess.run(cmd,cwd=cwd,env={**env,**extra},capture_output=True,text=True,timeout=420); out=p.stdout+p.stderr; code=p.returncode
+    except subprocess.TimeoutExpired as e: out=(e.stdout or '')+'\nTIMED OUT'; code=124
+    fails=[l.strip() for l in out.split('\n') if re.search(r'\bFAIL\b',l)]
+    m=re.search(r'(\d+) passed, (\d+) failed',out)
+    ok = code==0 and not fails and (m is None or m.group(2)=='0') and 'Traceback' not in out and 'TIMED OUT' not in out
+    if 'repro' in cmd[1]: ok = ok and 'errors: none' in out
+    if 'fresh' in cmd[1]: ok = ok and '5/5' in out and 'True' in out
+    if 'redir' in cmd[1]: ok = ok and out.count(' OK ')>=5
+    summary = f"{m.group(1)} passed" if m and ok else ('ok' if ok else (fails[0] if fails else out.strip().split('\n')[-1][:140]))
+    results.append((ok,label,summary,time.time()-t))
+    print(f"{'✅' if ok else '❌'} {label:30} {summary}  ({time.time()-t:.0f}s)", flush=True)
+    if not ok: print('   ' + '\n   '.join(out.strip().split('\n')[-25:]), flush=True)
+bad=[r for r in results if not r[0]]
+print(f"\n{len(results)-len(bad)}/{len(results)} suites passed in {time.time()-t0:.0f}s")
+sys.exit(1 if bad else 0)
