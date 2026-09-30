@@ -4,7 +4,8 @@ from playwright.sync_api import sync_playwright
 import os, time
 H='http://localhost:8765'; F=SITE+'/showgear/index.html'; ORIG=open(F,encoding='utf-8').read()
 def bump():
-    open(F,'w',encoding='utf-8').write(ORIG.replace("const SG_BUILD='2026-09-30.1'","const SG_BUILD='2026-09-30.2'")); t=time.time()+10; os.utime(F,(t,t))
+    import re as _re   # publish a "newer" build: the current one plus a suffix (never tied to a specific number)
+    open(F,'w',encoding='utf-8').write(_re.sub(r"const SG_BUILD='([^']+)'", lambda m: "const SG_BUILD='%s-test'"%m.group(1), ORIG, count=1)); t=time.time()+10; os.utime(F,(t,t))
 MOCK="window.supabase={createClient:()=>({from(){const b={select(){return b;},order(){return b;},limit(){return b;},eq(){return b;},in(){return b;},maybeSingle(){return b;},then(r){return Promise.resolve({data:[],error:null}).then(r);}};return b;},channel(){const c={on(){return c;},subscribe(){return c;}};return c;},auth:{getSession:async()=>({data:{session:null}})}})};"
 res=[]
 def ok(c,m): res.append(bool(c)); print(('  PASS ' if c else '  FAIL ')+m)
@@ -20,9 +21,9 @@ with sync_playwright() as pw:
         board.evaluate("sgCheckUpdate(false)"); board.wait_for_timeout(700)
         ok(board.query_selector('#sgUpdate') is not None,'board: "Update ready · tap to reload"')
         show.evaluate("sgCheckUpdate(false)"); show.wait_for_timeout(1500)
-        ok(show.evaluate("typeof window.__m")=='undefined' and show.evaluate("sgBuild()")=='2026-09-30.2','QR show page: reloads itself onto the new build')
+        ok(show.evaluate("typeof window.__m")=='undefined' and show.evaluate("sgBuild()").endswith('-test'),'QR show page: reloads itself onto the new build')
         board.click('[data-tab="log"]'); board.wait_for_timeout(200)
-        ok('build 2026-09-30.1' in board.inner_text('.sg-build'),'build number at the bottom of the Log')
+        ok(('build '+board.evaluate("sgBuild()")) in board.inner_text('.sg-build'),'build number at the bottom of the Log')
     finally:
         open(F,'w',encoding='utf-8').write(ORIG)
     ok(not errs,'no page errors '+str(errs[:2]))

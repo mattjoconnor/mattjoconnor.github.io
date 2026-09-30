@@ -65,6 +65,7 @@ with sync_playwright() as pw:
     ok(etkdb['archived'] and freed,'ETK archived and BP01–BP24 freed in the database')
     ok(pg.query_selector('#ps-p-etk') is None,'ETK leaves the Board')
     print('4. Drag to reorder (real mouse drag)')
+    if pg.query_selector('[data-action="collapse-all"]'): pg.click('[data-action="collapse-all"]'); pg.wait_for_timeout(300)   # reorder with sections collapsed, as a person would
     before=order(); print('    before:', before)
     h=pg.query_selector('.psec[data-pid="p-wkb"] .psec-drag'); t=pg.query_selector('.psec[data-pid="p-bra"]')
     hb=h.bounding_box(); tb=t.bounding_box()

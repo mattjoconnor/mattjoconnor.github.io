@@ -74,7 +74,8 @@ def ok(c,m): res.append(bool(c)); print(('  PASS ' if c else '  FAIL ')+m)
 H='http://localhost:8765'; F=SITE+'/showcomm/etk/index.html'
 ORIG=open(F,encoding='utf-8').read()
 def bump(n):
-    open(F,'w',encoding='utf-8').write(ORIG.replace("const ETK_BUILD='2026-09-30.10'", "const ETK_BUILD='2026-09-30.%d'"%n)); t=time.time()+n; os.utime(F,(t,t))
+    # publish a "newer" build: whatever the current build is, plus a suffix (never tied to a specific number)
+    open(F,'w',encoding='utf-8').write(_re.sub(r"const ETK_BUILD='([^']+)'", lambda m: "const ETK_BUILD='%s-test%d'"%(m.group(1),n), ORIG, count=1)); t=time.time()+n; os.utime(F,(t,t))
 with sync_playwright() as pw:
     b=pw.chromium.launch(); ctx=b.new_context(viewport={'width':820,'height':1180})
     ctx.route('**/*supabase*', lambda r: r.abort()); ctx.expose_function('__dbop', dbop); ctx.add_init_script(MOCK)
@@ -107,13 +108,13 @@ with sync_playwright() as pw:
         bump(11); tm.evaluate("etkCheckUpdate(false)"); tm.wait_for_timeout(800)
         ok(tm.query_selector('#etk-update-btn') is not None and 'UPDATE READY' in tm.inner_text('#etk-update-btn').upper(),'new build published → "Update ready · tap to reload"')
         tm.click('#etk-update-btn'); tm.wait_for_timeout(1500)
-        ok(tm.evaluate("ETK_BUILD")=='2026-09-30.11','tap → running the new build')
+        ok(tm.evaluate("ETK_BUILD").endswith('-test11'),'tap → running the new build')
         print('3. Cart updates itself, but only when idle')
         cart.click('.crew-device-card:has-text("BP07")'); cart.wait_for_timeout(300)   # someone mid-claim
         cart.evaluate("window.__marker=1"); cart.evaluate("etkCheckUpdate(false)"); cart.wait_for_timeout(1500)
         ok(cart.evaluate("window.__marker")==1 and cart.is_visible('#crew-claim-name'),'mid-claim: does NOT reload')
         cart.evaluate("crewCancelClaimForm()"); cart.evaluate("window._etkLastTouch=0"); cart.wait_for_timeout(11500)
-        ok(cart.evaluate("typeof window.__marker")=='undefined' and cart.evaluate("ETK_BUILD")=='2026-09-30.11','idle on the grid: reloads itself onto the new build')
+        ok(cart.evaluate("typeof window.__marker")=='undefined' and cart.evaluate("ETK_BUILD").endswith('-test11'),'idle on the grid: reloads itself onto the new build')
     finally:
         open(F,'w',encoding='utf-8').write(ORIG)
     ok(not errs,'no page errors '+str(errs[:3]))
