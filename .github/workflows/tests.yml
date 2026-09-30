@@ -1,14 +1,14 @@
 name: Tests
 
-# Runs every ShowComm, ShowGear and ShowPoint test on each push. The three repos are laid out
-# exactly like the live site (mattjoconnor.github.io/...), so the tests see what visitors see.
-# A red X here means something broke, and GitHub emails you about it.
+# Runs every ShowPoint test suite (ShowComm, ShowGear, ShowPoint, and the push function)
+# against the whole site, assembled the way GitHub Pages serves it. A failure shows a red ✗
+# on the commit and GitHub emails you. It reports only; it doesn't block publishing.
 on:
   push:
   workflow_dispatch:
 
 concurrency:
-  group: tests-${{ github.repository }}
+  group: tests-${{ github.repository }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -16,46 +16,44 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Get ShowPoint (site root)
+      - name: Get the site (root)
         uses: actions/checkout@v4
         with:
           repository: mattjoconnor/mattjoconnor.github.io
-          ref: ${{ github.repository == 'mattjoconnor/mattjoconnor.github.io' && github.sha || 'main' }}
           path: site
+          ref: ${{ github.repository == 'mattjoconnor/mattjoconnor.github.io' && github.sha || '' }}
       - name: Get ShowComm
         uses: actions/checkout@v4
         with:
           repository: mattjoconnor/showcomm
-          ref: ${{ github.repository == 'mattjoconnor/showcomm' && github.sha || 'main' }}
           path: site/showcomm
+          ref: ${{ github.repository == 'mattjoconnor/showcomm' && github.sha || '' }}
       - name: Get ShowGear
         uses: actions/checkout@v4
         with:
           repository: mattjoconnor/showgear
-          ref: ${{ github.repository == 'mattjoconnor/showgear' && github.sha || 'main' }}
           path: site/showgear
+          ref: ${{ github.repository == 'mattjoconnor/showgear' && github.sha || '' }}
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Install test tools
         run: |
-          cd site/_tests && npm install --no-audit --no-fund
-          pip install "playwright==1.56.0" pillow
+          cd site/_tests
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund jsdom jsqr web-push typescript
+          pip install playwright
           python -m playwright install --with-deps chromium
 
-      - name: Run every suite
-        env:
-          SITE: ${{ github.workspace }}/site
-        run: python site/_tests/run_all.py
+      - name: Serve the site
+        run: |
+          cd site && nohup python -m http.server 8765 > /tmp/http.log 2>&1 &
+          sleep 2
 
-      - name: Keep screenshots from a failed run
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: screenshots
-          path: /tmp/*.png
-          if-no-files-found: ignore
+      - name: Run every suite
+        run: SITE="$GITHUB_WORKSPACE/site" python site/_tests/run_all.py
