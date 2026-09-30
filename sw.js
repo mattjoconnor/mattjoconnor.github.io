@@ -8,7 +8,9 @@ self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   if (e.request.mode !== 'navigate') return;   // database calls, fonts and scripts go straight to the network
-  e.respondWith(fetch(e.request.url, {cache: 'no-cache', credentials: 'same-origin'})
+  // Pass the browser's own navigation through untouched, so GitHub's folder redirects
+  // (e.g. /showcomm/etk/crew -> /crew/) are followed normally. Only step in when offline.
+  e.respondWith(fetch(e.request)
     .catch(() => new Response(OFFLINE, {headers: {'Content-Type': 'text/html; charset=utf-8'}})));
 });
 // Push from the ShowComm alert function: shows even when the phone is locked or the app is closed
