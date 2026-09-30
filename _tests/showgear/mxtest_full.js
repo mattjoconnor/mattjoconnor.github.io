@@ -119,8 +119,7 @@ async function open(db,opts={},qs=''){
   ok(t.d.activeElement&&t.d.activeElement.id==='mxq','search keeps focus while typing');
   console.log('6. Log batching');
   await sleep(2700);
-  const lines=t.db.gear_log.map(l=>l.text);
-  ok(lines.filter(x=>/Latin Grammys/.test(x)).length===1&&lines.some(x=>/and 6 more assigned to Latin Grammys/.test(x)),'rapid changes batched into one log line (8 devices)');
+  ok(t.db.gear_log.length===1,'rapid changes write nothing to the retired log');
   ok(t.errs.length===0,'no errors'+(t.errs.length?': '+t.errs:''));
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
 })();

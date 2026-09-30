@@ -111,7 +111,7 @@ async function open(db,opts={},qs=''){
   t.click('[data-action="restore-prod"][data-id="p-bra"]'); await sleep(200);
   ok(db.gear_productions.find(p=>p.id==='p-bra').archived===false&&!!t.d.querySelector('#ps-p-bra'),'Restore brings BRA back onto the Board');
   await sleep(2700);
-  ok(db.gear_log.some(l=>/shared with BRA/.test(l.text)),'log records sharing');
+  ok(db.gear_log.length===1,'sharing writes nothing to the retired log');
   ok(t.errs.length===0,'no errors'+(t.errs.length?': '+t.errs:''));
   console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail?1:0);
 })();

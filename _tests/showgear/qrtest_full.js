@@ -84,7 +84,7 @@ function decodePdfRects(rects){
   t.click('[data-action="close-modal"]'); await sleep(30);
   // a brand-new production gets its QR with no extra steps
   db.gear_productions.push(P('p-new','Latin Grammys RC','LGRC','#D8282E','2026-11-13'));
-  t.click('[data-tab="log"]'); await sleep(20); t.click('[data-tab="board"]'); await sleep(30);
+  t.click('[data-tab="matrix"]'); await sleep(20); t.click('[data-tab="board"]'); await sleep(30);
   const t2=await open(db); t2.click(t2.d.querySelector('[data-action="show-qr"][data-id="p-new"]')); await sleep(60);
   ok(decodeSvg(t2.d.querySelector('.qr-svg').outerHTML)==='https://mattjoconnor.github.io/showgear/?prod=LGRC','new production (LGRC) gets a working QR automatically');
 

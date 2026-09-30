@@ -95,7 +95,7 @@ with sync_playwright() as pw:
     pg.click('[data-action="close-modal"]'); pg.wait_for_timeout(200)
     ok(order()==['p-wkb','p-bbb','p-bra'],'Move up: B/R Big Board moved above B/R Alert '+str(order()))
     print('6. Archived section (edit mode) and trimmed tabs')
-    ok(pg.eval_on_selector_all('[data-tab]','els=>els.map(e=>e.dataset.tab)')==['board','matrix','log'],'tabs: Board, Matrix, Log')
+    ok(pg.eval_on_selector_all('[data-tab]','els=>els.map(e=>e.dataset.tab)')==['board','matrix'],'tabs: Board, Matrix')
     ok(pg.query_selector('.psec.arch') is not None and 'ETK' in pg.eval_on_selector('.psec.arch','e=>e.textContent'),'archived ETK shows in the Archived section while editing')
     pg.click('.psec.arch .psec-hdr'); pg.wait_for_timeout(200)
     arch=pg.query_selector('.psec.arch'); arch.scroll_into_view_if_needed()

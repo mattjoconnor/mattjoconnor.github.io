@@ -72,14 +72,14 @@ async function open(db,opts={},qs=''){
   t.d.getElementById('gType').value='IFB'; t.d.getElementById('gType').onchange();
   t.setv('#gFrom','17'); t.setv('#gTo','18'); t.click('#gAdd'); await sleep(200);
   ok(db.gear_devices.some(x=>x.label==='IFB17')&&db.gear_devices.some(x=>x.label==='IFB18'),'Add gear writes IFB17 + IFB18 to the database');
-  ok(db.gear_log.some(l=>/IFB17 to IFB18 added/.test(l.text)),'change logged to database');
+  ok(db.gear_log.length===1,'the retired change log gets no new entries');
   // Picker: MIC01 to ETK
   t.click('[data-action="pick-gear"]'); await sleep(50);
   t.click([...t.d.querySelectorAll('.pk')].find(b=>b.textContent==='MIC01')); t.click('#pkGo'); await sleep(200);
   const m1=db.gear_devices.find(x=>x.label==='MIC01');
   ok(m1.status==='assigned'&&m1.production_id==='p-etk','picker assigns MIC01 to ETK in the database');
   // New production
-  ok(JSON.stringify([...t.d.querySelectorAll('[data-tab]')].map(b=>b.dataset.tab))==='["board","matrix","log"]','three tabs: Board, Matrix, Log');
+  ok(JSON.stringify([...t.d.querySelectorAll('[data-tab]')].map(b=>b.dataset.tab))==='["board","matrix"]','two tabs: Board, Matrix');
   t.click('[data-tab="board"]'); await sleep(30); t.click('[data-action="new-prod"]'); await sleep(50);
   t.setv('#pName','Latin Grammys RC'); t.setv('#pCode','lgrc'); t.click('#pSave'); await sleep(200);
   const lg=db.gear_productions.find(p=>p.name==='Latin Grammys RC');

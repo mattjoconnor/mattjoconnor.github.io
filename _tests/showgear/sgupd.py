@@ -22,8 +22,8 @@ with sync_playwright() as pw:
         ok(board.query_selector('#sgUpdate') is not None,'board: "Update ready · tap to reload"')
         show.evaluate("sgCheckUpdate(false)"); show.wait_for_timeout(1500)
         ok(show.evaluate("typeof window.__m")=='undefined' and show.evaluate("sgBuild()").endswith('-test'),'QR show page: reloads itself onto the new build')
-        board.click('[data-tab="log"]'); board.wait_for_timeout(200)
-        ok(('build '+board.evaluate("sgBuild()")) in board.inner_text('.sg-build'),'build number at the bottom of the Log')
+        board.click('[data-tab="board"]'); board.wait_for_timeout(200)
+        ok(('build '+board.evaluate("sgBuild()")) in board.inner_text('.sg-build'),'build number at the bottom of the Board')
     finally:
         open(F,'w',encoding='utf-8').write(ORIG)
     ok(not errs,'no page errors '+str(errs[:2]))
