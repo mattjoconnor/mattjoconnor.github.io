@@ -100,7 +100,7 @@ with sync_playwright() as pw:
     tm=ctx.new_page(); tm.on('pageerror', lambda e: errs.append(str(e)))
     tm.goto(H+'/showcomm/etk/index.html?role=tm'); tm.wait_for_timeout(1200)
     tm.fill('#login-username','tm'); tm.fill('#login-pw','showcomm'); tm.click('#btn-login'); tm.wait_for_timeout(2500)
-    ok(tm.inner_text('#tm-alerts-btn').upper()=='ALERTS ON' and tm.evaluate("_etkPushOn")==False,'no push service reachable: stays "Alerts on", falls back to popups')
+    ok(tm.get_attribute('#tm-alerts-btn','aria-label')=='Alerts on' and tm.evaluate("_etkPushOn")==False,'no push service reachable: stays "Alerts on", falls back to popups')
     ok(tm.evaluate("_tmActiveView")=='beltpacks' and tm.query_selector('#etk-queue-list') is not None,'dashboard works normally')
     ok(not errs,'no page errors '+str(errs[:3]))
     b.close()

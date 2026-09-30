@@ -98,7 +98,8 @@ with sync_playwright() as pw:
     over=tm.evaluate("document.documentElement.scrollWidth > window.innerWidth+1")
     ok(not over,'TM dashboard page fits a 390px phone (tabs scroll within their own row)')
     tm.screenshot(path='/tmp/tm-phone.png')
-    tm.click('#tm-prod-tabs .ribbon-tab:text-is("Cart")'); tm.wait_for_timeout(1500)
+    tm.click('#tm-more-btn'); tm.wait_for_timeout(200)                     # phones: Cart lives under More
+    tm.click('#tm-more-sheet button[data-view="cart"]'); tm.wait_for_timeout(1500)
     fr=tm.frame_locator('#etk-cart-frame')
     fr.locator('.crew-device-card:has-text("BP07")').click(); tm.wait_for_timeout(300)
     fr.locator('#crew-claim-name').fill('Nina'); fr.locator('#btn-crew-claim-submit').click(); tm.wait_for_timeout(900)

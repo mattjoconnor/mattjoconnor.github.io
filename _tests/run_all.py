@@ -49,6 +49,8 @@ SUITES = [
     ("ShowComm · update prompt + cart colors", PY + [f"{HERE}/showcomm/updtest.py"],     HERE, {},                  summary),
     ("ShowComm · push delivery",            PY + [f"{HERE}/showcomm/pushtest.py"],       HERE, {},                  summary),
     ("ShowComm · install (home screen)",    PY + [f"{HERE}/showcomm/pwatest.py"],        HERE, {},                  summary),
+    ("ShowComm · phone navigation",         PY + [f"{HERE}/showcomm/navtest.py"],        HERE, {},                  summary),
+    ("ShowComm · readability (12px, 4.5:1)", PY + [f"{HERE}/showcomm/readability.py"],   HERE, {},                  summary),
     ("ShowComm · cart key moves",           ["node", f"{HERE}/showcomm/movetest.js"],    ETK,  {},                  lambda o: no_fail(o, 5)),
     ("ShowComm · cart page loads",          ["node", f"{HERE}/showcomm/repro.js", "index.html", "crew"], ETK, {}, contains("errors: none")),
     ("ShowComm · TM page loads",            ["node", f"{HERE}/showcomm/repro.js", "index.html", "tm"],   ETK, {}, contains("errors: none")),
