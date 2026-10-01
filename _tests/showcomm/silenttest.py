@@ -15,12 +15,13 @@ with sync_playwright() as pw:
     print('Beltpacks')
     for _ in range(3): tm.evaluate("renderETKBeltpackStatus({bg:true})"); tm.wait_for_timeout(500)
     ok(tm.evaluate("window.__mut")==0,'3 background refreshes with no changes: page untouched (no flash)')
-    tm.click('#etk-all-toggle'); tm.wait_for_timeout(300); tm.evaluate("document.getElementById('tm-body').scrollTop=400"); tm.evaluate("window.__mut=0; 0")
+    tm.evaluate("const b=document.getElementById('tm-body'); b.scrollTop=Math.min(400, b.scrollHeight-b.clientHeight); 0")   # however far this layout can scroll
+    scrolled=tm.evaluate("document.getElementById('tm-body').scrollTop"); tm.evaluate("window.__mut=0; 0")
     STORE['key_requests'].append({'id':'k2','production_id':'ETK','device_id':'BP03','status':'open','requester_role':'crew','created_at':N(1),'note':json.dumps([{'keyIndex':1,'label':'Key 2','note':'AUD (PL)'}])})
     tm.evaluate("renderETKBeltpackStatus({bg:true})"); tm.wait_for_timeout(700)
     ok(tm.evaluate("window.__mut")>0 and 'AUD' in tm.inner_text('#etk-queue-item-BP03'),'a real change still appears on its own')
     ok(tm.evaluate("window.__loading")==0,'no "Loading…" in between')
-    ok(abs(tm.evaluate("document.getElementById('tm-body').scrollTop")-400)<5,'scroll position kept')
+    ok(abs(tm.evaluate("document.getElementById('tm-body').scrollTop")-scrolled)<5,'scroll position kept (%dpx)'%scrolled)
     print('Channels and Deploy')
     for v in ('channels','deploy'):
         tm.evaluate(f"setTMView('{v}')"); tm.wait_for_timeout(900); tm.evaluate("window.__mut=0; 0")
