@@ -51,6 +51,7 @@ SUITES = [
     ("ShowComm · install (home screen)",    PY + [f"{HERE}/showcomm/pwatest.py"],        HERE, {},                  summary),
     ("ShowComm · Blank + TM key edits",     PY + [f"{HERE}/showcomm/edittest.py"],       HERE, {},                  summary),
     ("ShowComm · cart Deploy tab",          PY + [f"{HERE}/showcomm/cartdeploy.py"],     HERE, {},                  summary),
+    ("ShowComm · cart Rename",              PY + [f"{HERE}/showcomm/renametest.py"],     HERE, {},                  summary),
     ("ShowComm · cart Back button",         PY + [f"{HERE}/showcomm/backtest.py"],       HERE, {},                  summary),
     ("ShowComm · login gate self-check",    PY + [f"{HERE}/showcomm/gatetest.py"],       HERE, {},                  summary),
     ("ShowComm · cart kiosk start",         PY + [f"{HERE}/showcomm/kiosktest.py"],      HERE, {},                  summary),
