@@ -3,8 +3,10 @@ SITE=os.environ.get('SITE','/tmp/site')
 import json
 from playwright.sync_api import sync_playwright
 P=lambda i,n,c,col,s,e=None,bo=None:{'id':i,'name':n,'code':c,'color':col,'start_date':s,'end_date':e,'location':'','notes':'','archived':False,'created_at':'x','board_order':bo}
-prods=[P('p-bra','B/R Alert','BRA','#FEFF2F','2026-10-01','2026-11-03'),P('p-etk','ETK','ETK','#66E5E1','2026-09-01','2026-09-16'),
-       P('p-bbb','B/R Big Board','BBB','#5936BB','2026-10-06','2026-12-28'),P('p-wkb','Who Knows Ball','WKB','#E757F3','2026-10-09','2026-10-15')]
+import datetime as _dt
+_D=lambda days: (_dt.date.today()+_dt.timedelta(days=days)).isoformat()   # dates relative to today, so running shows never "expire"
+prods=[P('p-bra','B/R Alert','BRA','#FEFF2F',_D(-30),_D(30)),P('p-etk','ETK','ETK','#66E5E1',_D(-60),_D(-45)),
+       P('p-bbb','B/R Big Board','BBB','#5936BB',_D(-25),_D(60)),P('p-wkb','Who Knows Ball','WKB','#E757F3',_D(-20),_D(90))]
 devs=[]
 def dev(t,n,st='unassigned',pids=()):
     devs.append({'id':f'{t}{n}','type':t,'label':f'{t}{n:02d}','model':'','serial':'','status':st,'production_ids':list(pids),'production_id':(list(pids) or [None])[0],'assignee':'','note':'','updated_at':'x'})
